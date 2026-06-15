@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { Trash2, Plus, Image as ImageIcon, Video, FileText, LayoutDashboard, Menu, X, Upload } from "lucide-react";
+import { Trash2, Plus, Image as ImageIcon, Video, FileText, LayoutDashboard, Menu, X, Upload, Code } from "lucide-react";
 
-// Fix for Next.js to ensure videos load correctly in the browser
+// Fix for Next.js to ensure standard videos load correctly in the browser
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
 
-type ElementType = "image" | "video" | "note";
+type ElementType = "image" | "video" | "note" | "embed";
 
 interface BoardElement {
   id: string;
@@ -31,6 +31,7 @@ export default function VisionBoard() {
   const [inputContent, setInputContent] = useState("");
   const [inputType, setInputType] = useState<ElementType | "upload">("note");
 
+  // Load data from Local Storage
   useEffect(() => {
     setIsMounted(true);
     const savedBoards = localStorage.getItem("visionBoards");
@@ -41,6 +42,7 @@ export default function VisionBoard() {
     }
   }, []);
 
+  // Save data to Local Storage
   useEffect(() => {
     if (isMounted) {
       try {
@@ -49,17 +51,6 @@ export default function VisionBoard() {
         if (e instanceof DOMException && e.name === 'QuotaExceededError') {
           alert("⚠️ Storage Full! Browsers only allow ~5MB of local storage. Please delete some images to save new items.");
         }
-      }
-    }
-  }, [boards, isMounted]);
-
-  // Tell Pinterest to render new widgets whenever the board updates
-  useEffect(() => {
-    if (isMounted && typeof window !== 'undefined') {
-      // @ts-ignore
-      if (window.PinUtils && window.PinUtils.build) {
-        // @ts-ignore
-        window.PinUtils.build();
       }
     }
   }, [boards, isMounted]);
@@ -218,13 +209,16 @@ export default function VisionBoard() {
             <div className="bg-white border-b p-3 md:p-4 shadow-sm flex flex-col xl:flex-row items-start xl:items-center gap-3 shrink-0 z-20">
               <h2 className="hidden md:block text-2xl font-bold w-full xl:w-auto xl:mr-auto truncate">{activeBoard.name}</h2>
               
-              <div className="grid grid-cols-2 sm:flex bg-gray-100 p-1 rounded w-full xl:w-auto gap-1 shrink-0">
-                <button onClick={() => setInputType("note")} className={`p-2 rounded flex justify-center items-center gap-1 text-xs sm:text-sm ${inputType === "note" ? "bg-white shadow" : "text-gray-600"}`}><FileText className="w-4 h-4"/> Note</button>
-                <button onClick={() => setInputType("image")} className={`p-2 rounded flex justify-center items-center gap-1 text-xs sm:text-sm ${inputType === "image" ? "bg-white shadow" : "text-gray-600"}`}><ImageIcon className="w-4 h-4"/> Image URL</button>
-                <button onClick={() => setInputType("upload")} className={`p-2 rounded flex justify-center items-center gap-1 text-xs sm:text-sm ${inputType === "upload" ? "bg-white shadow text-indigo-600 font-medium" : "text-gray-600"}`}><Upload className="w-4 h-4"/> Upload</button>
-                <button onClick={() => setInputType("video")} className={`p-2 rounded flex justify-center items-center gap-1 text-xs sm:text-sm ${inputType === "video" ? "bg-white shadow" : "text-gray-600"}`}><Video className="w-4 h-4"/> Video</button>
+              {/* Type Selectors */}
+              <div className="flex flex-wrap bg-gray-100 p-1 rounded w-full xl:w-auto gap-1 shrink-0">
+                <button onClick={() => setInputType("note")} className={`p-2 rounded flex-1 md:flex-none justify-center flex items-center gap-1 text-xs sm:text-sm ${inputType === "note" ? "bg-white shadow" : "text-gray-600"}`}><FileText className="w-4 h-4"/> Note</button>
+                <button onClick={() => setInputType("image")} className={`p-2 rounded flex-1 md:flex-none justify-center flex items-center gap-1 text-xs sm:text-sm ${inputType === "image" ? "bg-white shadow" : "text-gray-600"}`}><ImageIcon className="w-4 h-4"/> Img URL</button>
+                <button onClick={() => setInputType("upload")} className={`p-2 rounded flex-1 md:flex-none justify-center flex items-center gap-1 text-xs sm:text-sm ${inputType === "upload" ? "bg-white shadow text-indigo-600 font-medium" : "text-gray-600"}`}><Upload className="w-4 h-4"/> Upload</button>
+                <button onClick={() => setInputType("video")} className={`p-2 rounded flex-1 md:flex-none justify-center flex items-center gap-1 text-xs sm:text-sm ${inputType === "video" ? "bg-white shadow" : "text-gray-600"}`}><Video className="w-4 h-4"/> URL</button>
+                <button onClick={() => setInputType("embed")} className={`p-2 rounded flex-1 md:flex-none justify-center flex items-center gap-1 text-xs sm:text-sm ${inputType === "embed" ? "bg-white shadow text-green-600 font-medium" : "text-gray-600"}`}><Code className="w-4 h-4"/> Embed</button>
               </div>
 
+              {/* Dynamic Input Area */}
               <div className="flex w-full xl:w-auto gap-2">
                 {inputType === "upload" ? (
                   <div className="flex-1 w-full xl:w-64">
@@ -239,7 +233,7 @@ export default function VisionBoard() {
                   <>
                     <input
                       type="text"
-                      placeholder={inputType === "note" ? "Type note..." : "Paste URL..."}
+                      placeholder={inputType === "embed" ? "Paste <iframe> or Pinterest code here..." : "Type here..."}
                       className="border rounded p-2 flex-1 min-w-0 xl:w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                       value={inputContent}
                       onChange={(e) => setInputContent(e.target.value)}
@@ -276,6 +270,7 @@ export default function VisionBoard() {
                       <img src={el.content} alt="Board reference" className="w-full h-auto rounded-lg object-cover max-h-[300px] md:max-h-[400px]" onError={(e) => e.currentTarget.src = "https://via.placeholder.com/400?text=Invalid+Image"} />
                     )}
 
+                    {/* Standard React-Player for standard URLs */}
                     {el.type === "video" && (
                       <div className="relative pt-[56.25%] rounded-lg overflow-hidden bg-black">
                         <ReactPlayer 
@@ -287,6 +282,44 @@ export default function VisionBoard() {
                         />
                       </div>
                     )}
+
+                    {/* CRASH-PROOF SANDBOX FOR EMBEDS (Pinterest, Facebook, etc.) */}
+                    {el.type === "embed" && (
+                      <div className="w-full rounded-lg overflow-hidden bg-gray-100 min-h-[350px] relative flex items-center justify-center">
+                        <iframe
+                          title="Sandboxed Embed"
+                          className="absolute top-0 left-0 w-full h-full border-0"
+                          sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-presentation"
+                          srcDoc={`
+                            <!DOCTYPE html>
+                            <html>
+                              <head>
+                                <style>
+                                  body { 
+                                    margin: 0; 
+                                    display: flex; 
+                                    justify-content: center; 
+                                    align-items: center; 
+                                    min-height: 100vh; 
+                                    background-color: transparent;
+                                    overflow: hidden;
+                                  }
+                                  /* Forces inner iframes (like FB) to stretch correctly */
+                                  iframe {
+                                    max-width: 100%;
+                                  }
+                                </style>
+                              </head>
+                              <body>
+                                ${el.content}
+                                <script async src="https://assets.pinterest.com/js/pinit.js"></script>
+                              </body>
+                            </html>
+                          `}
+                        />
+                      </div>
+                    )}
+
                   </div>
                 ))}
               </div>
