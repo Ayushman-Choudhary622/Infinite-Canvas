@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import ReactPlayer from "react-player";
-import { Trash2, Plus, Image as ImageIcon, Video, FileText, LayoutDashboard } from "lucide-react";
+import { Trash2, Plus, Image as ImageIcon, Video, FileText, LayoutDashboard, Menu, X } from "lucide-react";
 
 type ElementType = "image" | "video" | "note";
 
@@ -22,6 +22,7 @@ export default function VisionBoard() {
   const [boards, setBoards] = useState<Board[]>([]);
   const [activeBoardId, setActiveBoardId] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // For mobile menu
 
   const [newBoardName, setNewBoardName] = useState("");
   const [inputContent, setInputContent] = useState("");
@@ -53,6 +54,7 @@ export default function VisionBoard() {
     setBoards([...boards, newBoard]);
     setActiveBoardId(newBoard.id);
     setNewBoardName("");
+    setIsSidebarOpen(false); // Close menu on mobile after creating
   };
 
   const deleteBoard = (id: string) => {
@@ -91,9 +93,22 @@ export default function VisionBoard() {
   const activeBoard = boards.find((b) => b.id === activeBoardId);
 
   return (
-    <div className="flex h-screen bg-gray-50 text-gray-900 font-sans">
-      <div className="w-64 bg-white border-r border-gray-200 p-4 flex flex-col h-full shadow-sm">
-        <h1 className="text-xl font-bold mb-6 flex items-center gap-2">
+    <div className="flex flex-col md:flex-row h-screen bg-gray-50 text-gray-900 font-sans overflow-hidden">
+      
+      {/* Mobile Header (Only visible on small screens) */}
+      <div className="md:hidden bg-white border-b border-gray-200 p-4 flex justify-between items-center shadow-sm z-20">
+        <h1 className="text-xl font-bold flex items-center gap-2">
+          <LayoutDashboard className="w-6 h-6 text-indigo-600" />
+          Vision Board
+        </h1>
+        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 bg-gray-100 rounded text-gray-700">
+          {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </div>
+
+      {/* Sidebar for Board Management */}
+      <div className={`${isSidebarOpen ? "block" : "hidden"} md:block w-full md:w-64 bg-white border-b md:border-r border-gray-200 p-4 flex flex-col absolute md:relative z-10 h-auto max-h-[50vh] md:max-h-full md:h-full shadow-lg md:shadow-sm overflow-y-auto`}>
+        <h1 className="hidden md:flex text-xl font-bold mb-6 items-center gap-2">
           <LayoutDashboard className="w-6 h-6 text-indigo-600" />
           My Boards
         </h1>
@@ -112,14 +127,17 @@ export default function VisionBoard() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto space-y-2">
+        <div className="flex-1 space-y-2">
           {boards.map((board) => (
             <div 
               key={board.id} 
               className={`flex justify-between items-center p-3 rounded cursor-pointer transition-colors ${
                 activeBoardId === board.id ? "bg-indigo-50 border-indigo-200 border" : "hover:bg-gray-100 border border-transparent"
               }`}
-              onClick={() => setActiveBoardId(board.id)}
+              onClick={() => {
+                setActiveBoardId(board.id);
+                setIsSidebarOpen(false); // Close menu on mobile after selection
+              }}
             >
               <span className="font-medium truncate">{board.name}</span>
               <button onClick={(e) => { e.stopPropagation(); deleteBoard(board.id); }} className="text-gray-400 hover:text-red-500">
@@ -131,51 +149,56 @@ export default function VisionBoard() {
         </div>
       </div>
 
+      {/* Main Canvas Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         {activeBoard ? (
           <>
-            <div className="bg-white border-b p-4 shadow-sm flex items-center gap-4 z-10">
-              <h2 className="text-2xl font-bold mr-auto">{activeBoard.name}</h2>
+            {/* Top Toolbar */}
+            <div className="bg-white border-b p-4 shadow-sm flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4 z-0">
+              <h2 className="text-xl md:text-2xl font-bold w-full md:w-auto md:mr-auto">{activeBoard.name}</h2>
               
-              <div className="flex bg-gray-100 p-1 rounded">
-                <button onClick={() => setInputType("note")} className={`p-2 rounded flex items-center gap-1 text-sm ${inputType === "note" ? "bg-white shadow" : "text-gray-600"}`}><FileText className="w-4 h-4"/> Note</button>
-                <button onClick={() => setInputType("image")} className={`p-2 rounded flex items-center gap-1 text-sm ${inputType === "image" ? "bg-white shadow" : "text-gray-600"}`}><ImageIcon className="w-4 h-4"/> Image URL</button>
-                <button onClick={() => setInputType("video")} className={`p-2 rounded flex items-center gap-1 text-sm ${inputType === "video" ? "bg-white shadow" : "text-gray-600"}`}><Video className="w-4 h-4"/> Video Link</button>
+              <div className="flex bg-gray-100 p-1 rounded w-full md:w-auto justify-between md:justify-start">
+                <button onClick={() => setInputType("note")} className={`p-2 rounded flex-1 md:flex-none justify-center flex items-center gap-1 text-sm ${inputType === "note" ? "bg-white shadow" : "text-gray-600"}`}><FileText className="w-4 h-4"/> Note</button>
+                <button onClick={() => setInputType("image")} className={`p-2 rounded flex-1 md:flex-none justify-center flex items-center gap-1 text-sm ${inputType === "image" ? "bg-white shadow" : "text-gray-600"}`}><ImageIcon className="w-4 h-4"/> Image</button>
+                <button onClick={() => setInputType("video")} className={`p-2 rounded flex-1 md:flex-none justify-center flex items-center gap-1 text-sm ${inputType === "video" ? "bg-white shadow" : "text-gray-600"}`}><Video className="w-4 h-4"/> Video</button>
               </div>
 
-              <input
-                type="text"
-                placeholder={inputType === "note" ? "Type your note..." : "Paste URL here..."}
-                className="border rounded p-2 w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                value={inputContent}
-                onChange={(e) => setInputContent(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addElement()}
-              />
-              <button onClick={addElement} className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 font-medium">
-                Add
-              </button>
+              <div className="flex w-full md:w-auto gap-2">
+                <input
+                  type="text"
+                  placeholder={inputType === "note" ? "Type note..." : "Paste URL..."}
+                  className="border rounded p-2 flex-1 md:w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  value={inputContent}
+                  onChange={(e) => setInputContent(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && addElement()}
+                />
+                <button onClick={addElement} className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 font-medium whitespace-nowrap">
+                  Add
+                </button>
+              </div>
             </div>
 
-            <div className="flex-1 overflow-auto p-6 bg-gray-50">
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-max">
+            {/* Canvas Grid */}
+            <div className="flex-1 overflow-auto p-4 md:p-6 bg-gray-50">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6 auto-rows-max">
                 {activeBoard.elements.map((el) => (
-                  <div key={el.id} className="relative group bg-white p-4 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow">
+                  <div key={el.id} className="relative group bg-white p-3 md:p-4 rounded-xl shadow-md border border-gray-100">
                     <button 
                       onClick={() => deleteElement(el.id)} 
-                      className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20 shadow"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
 
                     {el.type === "note" && (
-                      <div className="h-full min-h-[150px] flex items-center justify-center bg-yellow-50 rounded p-4 text-center text-lg text-gray-800 shadow-inner">
+                      <div className="h-full min-h-[120px] md:min-h-[150px] flex items-center justify-center bg-yellow-50 rounded p-4 text-center text-base md:text-lg text-gray-800 shadow-inner break-words">
                         {el.content}
                       </div>
                     )}
                     
                     {el.type === "image" && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={el.content} alt="Board reference" className="w-full h-auto rounded object-cover max-h-[400px]" onError={(e) => e.currentTarget.src = "https://via.placeholder.com/400?text=Invalid+Image+URL"} />
+                      <img src={el.content} alt="Board reference" className="w-full h-auto rounded object-cover max-h-[300px] md:max-h-[400px]" onError={(e) => e.currentTarget.src = "https://via.placeholder.com/400?text=Invalid+Image+URL"} />
                     )}
 
                     {el.type === "video" && (
@@ -193,16 +216,16 @@ export default function VisionBoard() {
                 ))}
               </div>
               {activeBoard.elements.length === 0 && (
-                <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                  <ImageIcon className="w-16 h-16 mb-4 text-gray-300" />
-                  <p className="text-xl">This board is empty.</p>
+                <div className="h-full flex flex-col items-center justify-center text-gray-400 p-8 text-center">
+                  <ImageIcon className="w-12 h-12 md:w-16 md:h-16 mb-4 text-gray-300" />
+                  <p className="text-lg md:text-xl">This board is empty.</p>
                   <p className="text-sm mt-2">Add notes, images, or video links from the top bar.</p>
                 </div>
               )}
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-400 text-xl">
+          <div className="flex-1 flex items-center justify-center text-gray-400 text-lg p-8 text-center">
             Select or create a board to get started.
           </div>
         )}
