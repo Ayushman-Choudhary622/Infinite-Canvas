@@ -1,4 +1,5 @@
 import './globals.css'
+import Script from 'next/script'
 
 export const metadata = {
   title: 'Vision Board',
@@ -12,7 +13,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* This script tells your app how to read Pinterest embed codes */}
+        <Script 
+          src="https://assets.pinterest.com/js/pinit.js" 
+          strategy="lazyOnload" 
+          data-pin-build="doBuild"
+        />
+      </body>
     </html>
   )
 }
