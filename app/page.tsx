@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import ReactPlayer from "react-player";
+import dynamic from "next/dynamic";
 import { Trash2, Plus, Image as ImageIcon, Video, FileText, LayoutDashboard, Menu, X, Upload } from "lucide-react";
+
+// Fix for Next.js to ensure videos load correctly in the browser
+const ReactPlayer = dynamic(() => import("react-player/lazy"), { ssr: false });
 
 type ElementType = "image" | "video" | "note";
 
@@ -60,7 +63,7 @@ export default function VisionBoard() {
     setBoards([...boards, newBoard]);
     setActiveBoardId(newBoard.id);
     setNewBoardName("");
-    setIsSidebarOpen(false); // Close menu on mobile
+    setIsSidebarOpen(false); 
   };
 
   const deleteBoard = (id: string) => {
@@ -125,10 +128,9 @@ export default function VisionBoard() {
   const activeBoard = boards.find((b) => b.id === activeBoardId);
 
   return (
-    // Changed h-screen to h-[100dvh] to fix mobile browser bottom bars
     <div className="flex h-[100dvh] w-full bg-gray-50 text-gray-900 font-sans overflow-hidden relative">
       
-      {/* Mobile Dark Overlay - Click to close menu */}
+      {/* Mobile Dark Overlay */}
       {isSidebarOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
@@ -205,7 +207,6 @@ export default function VisionBoard() {
             <div className="bg-white border-b p-3 md:p-4 shadow-sm flex flex-col xl:flex-row items-start xl:items-center gap-3 shrink-0 z-20">
               <h2 className="hidden md:block text-2xl font-bold w-full xl:w-auto xl:mr-auto truncate">{activeBoard.name}</h2>
               
-              {/* Type Selectors - 2x2 grid on mobile so they don't squish */}
               <div className="grid grid-cols-2 sm:flex bg-gray-100 p-1 rounded w-full xl:w-auto gap-1 shrink-0">
                 <button onClick={() => setInputType("note")} className={`p-2 rounded flex justify-center items-center gap-1 text-xs sm:text-sm ${inputType === "note" ? "bg-white shadow" : "text-gray-600"}`}><FileText className="w-4 h-4"/> Note</button>
                 <button onClick={() => setInputType("image")} className={`p-2 rounded flex justify-center items-center gap-1 text-xs sm:text-sm ${inputType === "image" ? "bg-white shadow" : "text-gray-600"}`}><ImageIcon className="w-4 h-4"/> Image URL</button>
@@ -213,7 +214,6 @@ export default function VisionBoard() {
                 <button onClick={() => setInputType("video")} className={`p-2 rounded flex justify-center items-center gap-1 text-xs sm:text-sm ${inputType === "video" ? "bg-white shadow" : "text-gray-600"}`}><Video className="w-4 h-4"/> Video</button>
               </div>
 
-              {/* Dynamic Input Area - Fixed flex shrinking */}
               <div className="flex w-full xl:w-auto gap-2">
                 {inputType === "upload" ? (
                   <div className="flex-1 w-full xl:w-64">
