@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { Trash2, Plus, Image as ImageIcon, Video, FileText, LayoutDashboard, Menu, X, Upload } from "lucide-react";
 
 // Fix for Next.js to ensure videos load correctly in the browser
-const ReactPlayer = dynamic(() => import("react-player/lazy"), { ssr: false });
+const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
 
 type ElementType = "image" | "video" | "note";
 
