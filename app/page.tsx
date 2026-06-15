@@ -53,6 +53,17 @@ export default function VisionBoard() {
     }
   }, [boards, isMounted]);
 
+  // Tell Pinterest to render new widgets whenever the board updates
+  useEffect(() => {
+    if (isMounted && typeof window !== 'undefined') {
+      // @ts-ignore
+      if (window.PinUtils && window.PinUtils.build) {
+        // @ts-ignore
+        window.PinUtils.build();
+      }
+    }
+  }, [boards, isMounted]);
+
   const createBoard = () => {
     if (!newBoardName.trim()) return;
     const newBoard: Board = {
